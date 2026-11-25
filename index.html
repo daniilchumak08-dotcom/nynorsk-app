@@ -35,14 +35,12 @@ body{font-family:-apple-system,sans-serif;background:linear-gradient(180deg,#dbe
 <div><h1>🇳🇴 Nynorsk 3D</h1><p id="wlc">Velkommen til Sogndal!</p></div>
 <div style="display:flex;gap:6px"><button id="mbtn" class="mbtn" onclick="togMus()">🔇 Музыка</button><button id="lvlbtn" class="mbtn hid" onclick="clk();rstLvl()">Уровень</button></div>
 </div>
-
 <div id="scr-lvl">
 <h3 style="margin-top:0">🚀 Выбери свой уровень:</h3>
 <div class="lcard e" onclick="clk();selLvl('e')"><div class="licon">🌱</div><div><b>Новичок (с нуля)</b><br><small>Алфавит (Æ, Ø, Å), озвучка, лёгкие слова и тест</small></div></div>
 <div class="lcard m" onclick="clk();selLvl('m')"><div class="licon">🏔️</div><div><b>Средний уровень</b><br><small>Глаголы, разговорные фразы и отличия от Bokmål</small></div></div>
 <div class="lcard h" onclick="clk();selLvl('h')"><div class="licon">👑</div><div><b>Продвинутый (B2+)</b><br><small>Сложная лексика и подготовка к Norskprøven</small></div></div>
 </div>
-
 <div id="app" class="hid">
 <div class="tabs">
 <button id="t-a" class="tab" onclick="clk();tab('a',this)">🔤 Алфавит</button>
@@ -69,211 +67,39 @@ body{font-family:-apple-system,sans-serif;background:linear-gradient(180deg,#dbe
 <button class="btn3d gold" onclick="clk();vip()">⭐ Подписаться за 100 Звёзд / мес</button>
 </div></div>
 </div>
-
 <script>
-let tg=null;
-try{
-    if(window.Telegram&&window.Telegram.WebApp){
-        tg=window.Telegram.WebApp;
-        tg.expand();
-        if(tg.initDataUnsafe&&tg.initDataUnsafe.user){
-            document.getElementById('wlc').innerText='Hei, '+tg.initDataUnsafe.user.first_name+'!';
-        }
-    }
-}catch(e){}
+let tg=null;try{if(window.Telegram&&window.Telegram.WebApp){tg=window.Telegram.WebApp;tg.expand();if(tg.initDataUnsafe&&tg.initDataUnsafe.user)document.getElementById('wlc').innerText='Hei, '+tg.initDataUnsafe.user.first_name+'!';}}catch(e){}
+let ctx=null,mus=false,mint=null,lvl='e',qi=0,sc=0,ns=0;
+function au(){try{if(!ctx){const AC=window.AudioContext||window.webkitAudioContext;ctx=new AC();}if(ctx.state==='suspended')ctx.resume();}catch(e){}}
+function tone(f,tp,d,v,dl){try{au();if(!ctx)return;const t=ctx.currentTime+(dl||0),o=ctx.createOscillator(),g=ctx.createGain();o.type=tp;o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+d);}catch(e){}}
+function clk(){tone(520,'sine',.07,.2,0);}
+function okSnd(){tone(523,'triangle',.25,.2,0);tone(659,'triangle',.25,.2,.08);tone(784,'triangle',.3,.2,.16);tone(1046,'triangle',.4,.25,.24);}
+function errSnd(){tone(210,'sawtooth',.25,.15,0);tone(160,'sawtooth',.3,.15,.12);}
+function getN(s){const m=s%6;if(m===0)return 261.6;if(m===1)return 329.6;if(m===2)return 392;if(m===3)return 493.9;if(m===4)return 392;return 329.6;}
+function togMus(){au();const b=document.getElementById('mbtn');if(!mus){mus=true;b.innerText='🎵 Музыка';mint=setInterval(()=>{if(mus)tone(getN(ns++),'sine',.45,.06,0);},500);}else{mus=false;b.innerText='🔇 Музыка';clearInterval(mint);}}
+function spk(t){try{if('speechSynthesis'in window){window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='nb-NO';u.rate=.95;window.speechSynthesis.speak(u);}}catch(e){}}
 
-let ctx=null,mus=false,mint=null,lvl='e',qi=0,sc=0,noteStep=0;
+const al=[{l:'Æ æ',s:'Э',sp:1,w:'Ære'},{l:'Ø ø',s:'Ё',sp:1,w:'Øy'},{l:'Å å',s:'О',sp:1,w:'År'},{l:'A a',s:'а',sp:0,w:'A'},{l:'B b',s:'б',sp:0,w:'B'},{l:'D d',s:'д',sp:0,w:'D'},{l:'E e',s:'э',sp:0,w:'E'},{l:'F f',s:'ф',sp:0,w:'F'},{l:'G g',s:'г/й',sp:0,w:'G'},{l:'H h',s:'х',sp:0,w:'H'},{l:'I i',s:'и',sp:0,w:'I'},{l:'K k',s:'к/хь',sp:0,w:'K'},{l:'L l',s:'л',sp:0,w:'L'},{l:'M m',s:'м',sp:0,w:'M'},{l:'N n',s:'н',sp:0,w:'N'},{l:'O o',s:'у/о',sp:0,w:'O'},{l:'R r',s:'р',sp:0,w:'R'},{l:'S s',s:'с',sp:0,w:'S'},{l:'T t',s:'т',sp:0,w:'T'},{l:'U u',s:'у/ю',sp:0,w:'U'},{l:'V v',s:'в',sp:0,w:'V'},{l:'Y y',s:'ю',sp:0,w:'Y'}];
+document.getElementById('agrid').innerHTML=al.map(x=>`<div class="abox ${x.sp?'sp':''}" onclick="clk();spk('${x.w}')"><b style="font-size:22px;color:#1d4ed8">${x.l}</b><br><small>(${x.s}) 🔊</small></div>`).join('');
 
-function au(){try{if(!ctx){const AC=window.AudioContext||window.webkitAudioContext;ctx=new AC();}if(ctx.state==='suspended'){ctx.resume();}}catch(e){}}
-function tone(freq,type,dur,vol,delay){
-    try{
-        au();if(!ctx)return;
-        const t=ctx.currentTime+(delay||0);
-        const o=ctx.createOscillator(),g=ctx.createGain();
-        o.type=type;o.frequency.setValueAtTime(freq,t);
-        g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);
-        o.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+dur);
-    }catch(e){}
-}
-function clk(){tone(520,'sine',0.07,0.2,0);}
-function okSnd(){tone(523,'triangle',0.25,0.2,0);tone(659,'triangle',0.25,0.2,0.08);tone(784,'triangle',0.3,0.2,0.16);tone(1046,'triangle',0.4,0.25,0.24);}
-function errSnd(){tone(210,'sawtooth',0.25,0.15,0);tone(160,'sawtooth',0.3,0.15,0.12);}
-function getNote(s){
-    const m=s%6;
-    if(m===0)return 261.6;if(m===1)return 329.6;if(m===2)return 392.0;
-    if(m===3)return 493.9;if(m===4)return 392.0;return 329.6;
-}
-function togMus(){
-    au();const b=document.getElementById('mbtn');
-    if(!mus){mus=true;b.innerText='🎵 Музыка';mint=setInterval(()=>{if(mus)tone(getNote(noteStep++),'sine',0.45,0.06,0);},500);}
-    else{mus=false;b.innerText='🔇 Музыка';clearInterval(mint);}
-}
-function spk(t){try{if('speechSynthesis'in window){window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='nb-NO';u.rate=0.95;window.speechSynthesis.speak(u);}}catch(e){}}
-
-const alphaList=[
-    {l:'Æ æ',s:'Э',sp:1,w:'Ære'},{l:'Ø ø',s:'Ё',sp:1,w:'Øy'},{l:'Å å',s:'О',sp:1,w:'År'},
-    {l:'A a',s:'а',sp:0,w:'A'},{l:'B b',s:'б',sp:0,w:'B'},{l:'C c',s:'с/к',sp:0,w:'C'},
-    {l:'D d',s:'д',sp:0,w:'D'},{l:'E e',s:'э',sp:0,w:'E'},{l:'F f',s:'ф',sp:0,w:'F'},
-    {l:'G g',s:'г/й',sp:0,w:'G'},{l:'H h',s:'х',sp:0,w:'H'},{l:'I i',s:'и',sp:0,w:'I'},
-    {l:'J j',s:'й',sp:0,w:'J'},{l:'K k',s:'к/хь',sp:0,w:'K'},{l:'L l',s:'л',sp:0,w:'L'},
-    {l:'M m',s:'м',sp:0,w:'M'},{l:'N n',s:'н',sp:0,w:'N'},{l:'O o',s:'у/о',sp:0,w:'O'},
-    {l:'P p',s:'п',sp:0,w:'P'},{l:'R r',s:'р',sp:0,w:'R'},{l:'S s',s:'с',sp:0,w:'S'},
-    {l:'T t',s:'т',sp:0,w:'T'},{l:'U u',s:'у/ю',sp:0,w:'U'},{l:'V v',s:'в',sp:0,w:'V'},
-    {l:'Y y',s:'ю',sp:0,w:'Y'}
-];
-document.getElementById('agrid').innerHTML=alphaList.map(x=>`<div class="abox ${x.sp?'sp':''}" onclick="clk();spk('${x.w}')"><b style="font-size:22px;color:#1d4ed8">${x.l}</b><br><small>(${x.s}) 🔊</small></div>`).join('');
-
-const wordsDB={
-    e:[
-        {w:'Hei!',b:'Hei!',t:'Привет!',ex:'Hei! Korleis går det? — Привет! Как дела?'},
-        {w:'Takk',b:'Takk',t:'Спасибо',ex:'Tusen takk! — Большое спасибо!'},
-        {w:'Ja / Nei',b:'Ja / Nei',t:'Да / Нет',ex:'Ja, eg forstår. — Да, я понимаю.'},
-        {w:'Eg',b:'Jeg',t:'Я',ex:'Eg heiter Daniil. — Меня зовут Даниил.'},
-        {w:'Ikkje',b:'Ikke',t:'Не',ex:'Eg veit ikkje. — Я не знаю.'},
-        {w:'Vatn / Mat',b:'Vann / Mat',t:'Вода / Еда',ex:'Kan eg få eit glas vatn? — Можно стакан воды?'}
-    ],
-    m:[
-        {w:'Å vere',b:'Å være',t:'Быть',ex:'Det er fint vêr i Sogndal. — В Согндале хорошая погода.'},
-        {w:'Kva / Kven',b:'Hva / Hvem',t:'Что / Кто',ex:'Kva gjer du no? — Что ты сейчас делаешь?'},
-        {w:'Å snakke',b:'Å snakke',t:'Говорить (snakkar)',ex:'Eg snakkar litt norsk. — Я немного говорю по-норвежски.'},
-        {w:'Mykje',b:'Mye',t:'Много',ex:'Det er mykje snø på fjellet. — В горах много снега.'}
-    ],
-    h:[
-        {w:'Å føretrekkje',b:'Å foretrekke',t:'Предпочитать',ex:'Eg føretrekkjer å skrive nynorsk. — Я предпочитаю писать на нюношке.'},
-        {w:'Sjølvsagt',b:'Selvfølgelig',t:'Разумеется',ex:'Sjølvsagt kan eg hjelpe deg! — Конечно, я могу помочь!'},
-        {w:'Å hugse',b:'Å huske',t:'Помнить',ex:'Hugsar du kva ho sa? — Ты помнишь, что она сказала?'},
-{w:'Å gjere',b:'Å gjøre',t:'Делать (gjer)',ex:'Kva skal vi gjere i helga? — Что будем делать на выходных?'}
-]
+const wDB={
+e:[{w:'Hei!',b:'Hei!',t:'Привет!',ex:'Hei! Korleis går det?'},{w:'Takk',b:'Takk',t:'Спасибо',ex:'Tusen takk!'},{w:'Eg',b:'Jeg',t:'Я',ex:'Eg heiter Daniil.'},{w:'Ikkje',b:'Ikke',t:'Не',ex:'Eg veit ikkje.'},{w:'Vatn',b:'Vann',t:'Вода',ex:'Eit glas vatn.'}],
+m:[{w:'Å vere',b:'Å være',t:'Быть',ex:'Det er fint vêr i Sogndal.'},{w:'Kva / Kven',b:'Hva / Hvem',t:'Что / Кто',ex:'Kva gjer du no?'},{w:'Å snakke',b:'Å snakke',t:'Говорить (snakkar)',ex:'Eg snakkar norsk.'},{w:'Mykje',b:'Mye',t:'Много',ex:'Mykje snø på fjellet.'}],
+h:[{w:'Å føretrekkje',b:'Å foretrekke',t:'Предпочитать',ex:'Eg føretrekkjer nynorsk.'},{w:'Sjølvsagt',b:'Selvfølgelig',t:'Разумеется',ex:'Sjølvsagt kan eg hjelpe!'},{w:'Å hugse',b:'Å huske',t:'Помнить',ex:'Hugsar du det?'},{w:'Å gjere',b:'Å gjøre',t:'Делать (gjer)',ex:'Kva skal vi gjere?'}]
 };
-const qsDB={
-e:[
-{q:'1. Перевод «Hei»?',o1:'Пока',o2:'Привет',o3:'Спасибо',a:2},
-{q:'2. Букв в алфавите?',o1:'26',o2:'29',o3:'33',a:2},
-{q:'3. «Я» на Nynorsk?',o1:'Jeg',o2:'Eg',o3:'Ik',a:2},
-{q:'4. «Спасибо»?',o1:'Takk',o2:'Unnskyld',o3:'Bra',a:1},
-{q:'5. «Не» на Nynorsk?',o1:'Ikke',o2:'Ikkje',o3:'Inte',a:2},
-{q:'6. Буква как «Ё»?',o1:'Æ',o2:'Ø',o3:'Å',a:2},
-{q:'7. «Vatn»?',o1:'Огонь',o2:'Вода',o3:'Хлеб',a:2},
-{q:'8. «Да»?',o1:'Nei',o2:'Ja',o3:'Kanskje',a:2},
-{q:'9. «Eg heiter...»?',o1:'Я живу',o2:'Меня зовут',o3:'Я хочу',a:2},
-{q:'10. «Пока»?',o1:'Ha det!',o2:'God natt',o3:'Takk',a:1},
-{q:'11. «Один» (муж. род)?',o1:'En',o2:'Ein',o3:'Eit',a:2},
-{q:'12. «Mat»?',o1:'Мать',o2:'Еда',o3:'Дом',a:2},
-{q:'13. Последняя буква алфавита?',o1:'Ø',o2:'Æ',o3:'Å',a:3},
-{q:'14. «God morgon»?',o1:'Добрый вечер',o2:'Доброе утро',o3:'Спокойной ночи',a:2},
-{q:'15. «Я не понимаю»?',o1:'Eg forstår ikkje',o2:'Jeg forstår ikke',o3:'Eg veit',a:1},
-{q:'16. «Noreg»?',o1:'Швеция',o2:'Норвегия',o3:'Дания',a:2},
-{q:'17. «Дом»?',o1:'Bil',o2:'Hus',o3:'Bok',a:2},
-{q:'18. «Tusen takk»?',o1:'Пожалуйста',o2:'Большое спасибо',o3:'Извините',a:2},
-{q:'19. «Нет»?',o1:'Ja',o2:'Nei',o3:'Bra',a:2},
-{q:'20. «Bra»?',o1:'Плохо',o2:'Хорошо',o3:'Быстро',a:2}
-],
-m:[
-{q:'1. «Что?» на Nynorsk?',o1:'Hva',o2:'Kva',o3:'Vem',a:2},
-{q:'2. «Eg snakk__ norsk»?',o1:'-er',o2:'-ar',o3:'-or',a:2},
-{q:'3. «Korleis»?',o1:'Где',o2:'Как',o3:'Когда',a:2},
-{q:'4. «Быть» на Nynorsk?',o1:'Å være',o2:'Å vere',o3:'Å vara',a:2},
-{q:'5. «Много»?',o1:'Mye',o2:'Mykje',o3:'Mange',a:2},
-{q:'6. «Kven er det?»',o1:'Что это?',o2:'Кто это?',o3:'Где это?',a:2},
-{q:'7. Артикль ср. рода?',o1:'Ein',o2:'Ei',o3:'Eit',a:3},
-{q:'8. «Ехать на машине»?',o1:'Å kjøre',o2:'Å køyre',o3:'Å gå',a:2},
-{q:'9. «Vêr»?',o1:'Ветер',o2:'Погода',o3:'Время',a:2},
-{q:'10. «Мы» на Nynorsk?',o1:'Vi / Me',o2:'De',o3:'Dei',a:1},
-{q:'11. «Они» на Nynorsk?',o1:'De',o2:'Dei',o3:'Dem',a:2},
-{q:'12. «Å lese»?',o1:'Писать',o2:'Читать',o3:'Слушать',a:2},
-{q:'13. «Девочка» с артиклем?',o1:'En jente',o2:'Ei jente',o3:'Eit jente',a:2},
-{q:'14. «I dag»?',o1:'Вчера',o2:'Сегодня',o3:'Завтра',a:2},
-{q:'15. «Завтра»?',o1:'I går',o2:'I dag',o3:'I morgon',a:3},
-{q:'16. «Å arbeide»?',o1:'Отдыхать',o2:'Работать',o3:'Учиться',a:2},
-{q:'17. «Неделя»?',o1:'Uke',o2:'Veke',o3:'Månad',a:2},
-{q:'18. «Fjell»?',o1:'Море',o2:'Гора',o3:'Лес',a:2},
-{q:'19. «Снег»?',o1:'Regn',o2:'Snø',o3:'Sol',a:2},
-{q:'20. «Å bu»?',o1:'Строить',o2:'Жить',o3:'Покупать',a:2}
-],
-h:[
-{q:'1. «Предпочитать»?',o1:'Å foretrekke',o2:'Å føretrekkje',o3:'Å like',a:2},
-{q:'2. Наст. время «Å gjere»?',o1:'Gjør',o2:'Gjer',o3:'Gjerer',a:2},
-{q:'3. «Sjølvsagt»?',o1:'Сложно',o2:'Разумеется',o3:'Внезапно',a:2},
-{q:'4. «Å hugse»?',o1:'Забывать',o2:'Помнить',o3:'Думать',a:2},
-{q:'5. «Разница»?',o1:'Forskjell',o2:'Skilnad',o3:'Likskap',a:2},
-{q:'6. «Å oppleve»?',o1:'Испытывать',o2:'Опаздывать',o3:'Открывать',a:1},
-{q:'7. «Собственный»?',o1:'Egen',o2:'Eigen',o3:'Eget',a:2},
-{q:'8. «Å vere glad ___ deg»?',o1:'på',o2:'i',o3:'til',a:2},
-{q:'9. «Framleis»?',o1:'Назад',o2:'Всё ещё',o3:'Впервые',a:2},
-{q:'10. «Общество»?',o1:'Samfunn',o2:'Storting',o3:'Kommune',a:1},
-{q:'11. «Å avgjere»?',o1:'Отменять',o2:'Решать',o3:'Обсуждать',a:2},
-{q:'12. «Язык»?',o1:'Språk',o2:'Mål / Språk',o3:'Ord',a:2},
-{q:'13. «Nøgd»?',o1:'Недовольный',o2:'Довольный',o3:'Уставший',a:2},
-{q:'14. «Вопрос»?',o1:'Spørsmål',o2:'Svar',o3:'Problem',a:1},
-{q:'15. «Å verte»?',o1:'Ждать',o2:'Становиться',o3:'Защищать',a:2},
-{q:'16. «Возможность»?',o1:'Mulighet',o2:'Moglegheit',o3:'Vanske',a:2},
-{q:'17. «Trass i»?',o1:'Благодаря',o2:'Несмотря на',o3:'Вместо',a:2},
-{q:'18. «Опыт»?',o1:'Erfaring / Røynsle',o2:'Kunnskap',o3:'Utdanning',a:1},
-{q:'19. «Å nytta»?',o1:'Использовать',o2:'Наслаждаться',o3:'Менять',a:1},
-{q:'20. «Правительство»?',o1:'Regjering',o2:'Fylke',o3:'Bygd',a:1}
-]
+const qDB={
+e:[{q:'1. Перевод «Hei»?',o1:'Пока',o2:'Привет',o3:'Спасибо',a:2},{q:'2. Букв в алфавите?',o1:'26',o2:'29',o3:'33',a:2},{q:'3. «Я» на Nynorsk?',o1:'Jeg',o2:'Eg',o3:'Ik',a:2},{q:'4. «Спасибо»?',o1:'Takk',o2:'Unnskyld',o3:'Bra',a:1},{q:'5. «Не» на Nynorsk?',o1:'Ikke',o2:'Ikkje',o3:'Inte',a:2},{q:'6. Буква как «Ё»?',o1:'Æ',o2:'Ø',o3:'Å',a:2},{q:'7. «Vatn»?',o1:'Огонь',o2:'Вода',o3:'Хлеб',a:2},{q:'8. «Да»?',o1:'Nei',o2:'Ja',o3:'Kanskje',a:2},{q:'9. «Eg heiter...»?',o1:'Я живу',o2:'Меня зовут',o3:'Я хочу',a:2},{q:'10. «Пока»?',o1:'Ha det!',o2:'God natt',o3:'Takk',a:1},{q:'11. «Один» (муж. род)?',o1:'En',o2:'Ein',o3:'Eit',a:2},{q:'12. «Mat»?',o1:'Мать',o2:'Еда',o3:'Дом',a:2},{q:'13. Последняя буква алфавита?',o1:'Ø',o2:'Æ',o3:'Å',a:3},{q:'14. «God morgon»?',o1:'Добрый вечер',o2:'Доброе утро',o3:'Спокойной ночи',a:2},{q:'15. «Я не понимаю»?',o1:'Eg forstår ikkje',o2:'Jeg forstår ikke',o3:'Eg veit',a:1},{q:'16. «Noreg»?',o1:'Швеция',o2:'Норвегия',o3:'Дания',a:2},{q:'17. «Дом»?',o1:'Bil',o2:'Hus',o3:'Bok',a:2},{q:'18. «Tusen takk»?',o1:'Пожалуйста',o2:'Большое спасибо',o3:'Извините',a:2},{q:'19. «Нет»?',o1:'Ja',o2:'Nei',o3:'Bra',a:2},{q:'20. «Bra»?',o1:'Плохо',o2:'Хорошо',o3:'Быстро',a:2}],
+m:[{q:'1. «Что?» на Nynorsk?',o1:'Hva',o2:'Kva',o3:'Vem',a:2},{q:'2. «Eg snakk__ norsk»?',o1:'-er',o2:'-ar',o3:'-or',a:2},{q:'3. «Korleis»?',o1:'Где',o2:'Как',o3:'Когда',a:2},{q:'4. «Быть» на Nynorsk?',o1:'Å være',o2:'Å vere',o3:'Å vara',a:2},{q:'5. «Много»?',o1:'Mye',o2:'Mykje',o3:'Mange',a:2},{q:'6. «Kven er det?»',o1:'Что это?',o2:'Кто это?',o3:'Где это?',a:2},{q:'7. Артикль ср. рода?',o1:'Ein',o2:'Ei',o3:'Eit',a:3},{q:'8. «Ехать на машине»?',o1:'Å kjøre',o2:'Å køyre',o3:'Å gå',a:2},{q:'9. «Vêr»?',o1:'Ветер',o2:'Погода',o3:'Время',a:2},{q:'10. «Мы» на Nynorsk?',o1:'Vi / Me',o2:'De',o3:'Dei',a:1},{q:'11. «Они» на Nynorsk?',o1:'De',o2:'Dei',o3:'Dem',a:2},{q:'12. «Å lese»?',o1:'Писать',o2:'Читать',o3:'Слушать',a:2},{q:'13. «Девочка» с артиклем?',o1:'En jente',o2:'Ei jente',o3:'Eit jente',a:2},{q:'14. «I dag»?',o1:'Вчера',o2:'Сегодня',o3:'Завтра',a:2},{q:'15. «Завтра»?',o1:'I går',o2:'I dag',o3:'I morgon',a:3},{q:'16. «Å arbeide»?',o1:'Отдыхать',o2:'Работать',o3:'Учиться',a:2},{q:'17. «Неделя»?',o1:'Uke',o2:'Veke',o3:'Månad',a:2},{q:'18. «Fjell»?',o1:'Море',o2:'Гора',o3:'Лес',a:2},{q:'19. «Снег»?',o1:'Regn',o2:'Snø',o3:'Sol',a:2},{q:'20. «Å bu»?',o1:'Строить',o2:'Жить',o3:'Покупать',a:2}],
+h:[{q:'1. «Предпочитать»?',o1:'Å foretrekke',o2:'Å føretrekkje',o3:'Å like',a:2},{q:'2. Наст. время «Å gjere»?',o1:'Gjør',o2:'Gjer',o3:'Gjerer',a:2},{q:'3. «Sjølvsagt»?',o1:'Сложно',o2:'Разумеется',o3:'Внезапно',a:2},{q:'4. «Å hugse»?',o1:'Забывать',o2:'Помнить',o3:'Думать',a:2},{q:'5. «Разница»?',o1:'Forskjell',o2:'Skilnad',o3:'Likskap',a:2},{q:'6. «Å oppleve»?',o1:'Испытывать',o2:'Опаздывать',o3:'Открывать',a:1},{q:'7. «Собственный»?',o1:'Egen',o2:'Eigen',o3:'Eget',a:2},{q:'8. «Å vere glad ___ deg»?',o1:'på',o2:'i',o3:'til',a:2},{q:'9. «Framleis»?',o1:'Назад',o2:'Всё ещё',o3:'Впервые',a:2},{q:'10. «Общество»?',o1:'Samfunn',o2:'Storting',o3:'Kommune',a:1},{q:'11. «Å avgjere»?',o1:'Отменять',o2:'Решать',o3:'Обсуждать',a:2},{q:'12. «Язык»?',o1:'Språk',o2:'Mål / Språk',o3:'Ord',a:2},{q:'13. «Nøgd»?',o1:'Недовольный',o2:'Довольный',o3:'Уставший',a:2},{q:'14. «Вопрос»?',o1:'Spørsmål',o2:'Svar',o3:'Problem',a:1},{q:'15. «Å verte»?',o1:'Ждать',o2:'Становиться',o3:'Защищать',a:2},{q:'16. «Возможность»?',o1:'Mulighet',o2:'Moglegheit',o3:'Vanske',a:2},{q:'17. «Trass i»?',o1:'Благодаря',o2:'Несмотря на',o3:'Вместо',a:2},{q:'18. «Опыт»?',o1:'Erfaring / Røynsle',o2:'Kunnskap',o3:'Utdanning',a:1},{q:'19. «Å nytta»?',o1:'Использовать',o2:'Наслаждаться',o3:'Менять',a:1},{q:'20. «Правительство»?',o1:'Regjering',o2:'Fylke',o3:'Bygd',a:1}]
 };
-function selLvl(l){
-lvl=l;
-document.getElementById('scr-lvl').classList.add('hid');
-document.getElementById('app').classList.remove('hid');
-document.getElementById('lvlbtn').classList.remove('hid');
-const ab=document.getElementById('t-a');
-if(l==='e'){ab.classList.remove('hid');tab('a',ab);}
-else{ab.classList.add('hid');tab('w',document.getElementById('t-w'));}
-let wList=wordsDB.e;
-if(l==='m')wList=wordsDB.m;
-if(l==='h')wList=wordsDB.h;
-document.getElementById('w').innerHTML=wList.map(x=><div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:20px;color:#e11d48">${x.w}</b><button class="sbtn" onclick="clk();spk('${x.w}')">🔊</button></div><small style="color:#64748b">Bokmål: ${x.b}</small><div style="font-weight:700;margin:6px 0">${x.t}</div><div style="background:#f1f5f9;padding:8px;border-radius:10px;font-size:13px">${x.ex}</div></div>).join('');
-qi=0;sc=0;
-document.getElementById('qbox').classList.remove('hid');
-document.getElementById('pay').classList.add('hid');
-loadQ();
-}
+function selLvl(l){lvl=l;document.getElementById('scr-lvl').classList.add('hid');document.getElementById('app').classList.remove('hid');document.getElementById('lvlbtn').classList.remove('hid');const ab=document.getElementById('t-a');if(l==='e'){ab.classList.remove('hid');tab('a',ab);}else{ab.classList.add('hid');tab('w',document.getElementById('t-w'));}let wl=wDB.e;if(l==='m')wl=wDB.m;if(l==='h')wl=wDB.h;document.getElementById('w').innerHTML=wl.map(x=>`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:20px;color:#e11d48">${x.w}</b><button class="sbtn" onclick="clk();spk('${x.w}')">🔊</button></div><small style="color:#64748b">Bokmål: ${x.b}</small><div style="font-weight:700;margin:6px 0">${x.t}</div><div style="background:#f1f5f9;padding:8px;border-radius:10px;font-size:13px">${x.ex}</div></div>`).join('');qi=0;sc=0;document.getElementById('qbox').classList.remove('hid');document.getElementById('pay').classList.add('hid');loadQ();}
 function rstLvl(){document.getElementById('app').classList.add('hid');document.getElementById('lvlbtn').classList.add('hid');document.getElementById('scr-lvl').classList.remove('hid');}
-function tab(id,b){
-document.getElementById('a').classList.add('hid');document.getElementById('w').classList.add('hid');
-document.getElementById('q').classList.add('hid');document.getElementById('v').classList.add('hid');
-document.getElementById(id).classList.remove('hid');
-document.querySelectorAll('.tab').forEach(t=>t.classList.remove('act'));
-b.classList.add('act');
-}
-function getQList(){if(lvl==='m')return qsDB.m;if(lvl==='h')return qsDB.h;return qsDB.e;}
-function loadQ(){
-const list=getQList();
-if(qi>=list.length){
-okSnd();spk('Gratulerer! Du er kjempeflink!');
-document.getElementById('qbox').classList.add('hid');
-document.getElementById('pay').classList.remove('hid');
-return;
-}
-let c=null;
-list.forEach((item,idx)=>{if(idx===qi)c=item;});
-document.getElementById('qcnt').innerText=Вопрос ${qi+1}/20 (Бесплатно);
-document.getElementById('qscr').innerText=Верно: ${sc};
-document.getElementById('qtxt').innerText=c.q;
-document.getElementById('qfb').innerText='';
-document.getElementById('nxt').classList.add('hid');
-const od=document.getElementById('qopts');
-od.innerHTML=<button class="qopt" onclick="chk(this,${c.a===1})">${c.o1}</button> <button class="qopt" onclick="chk(this,${c.a===2})">${c.o2}</button> <button class="qopt" onclick="chk(this,${c.a===3})">${c.o3}</button>;
-}
-function chk(b,ok){
-document.querySelectorAll('.qopt').forEach(x=>x.disabled=true);
-const f=document.getElementById('qfb');
-if(ok){
-sc++;okSnd();spk('Det er veldig bra! Kjempefint!');
-b.style.background='#10b981';b.style.color='#fff';
-f.style.color='#047857';f.innerText='✅ Det er veldig bra! (Это очень хорошо!)';
-}else{
-errSnd();spk('Prøv igjen!');
-b.style.background='#e11d48';b.style.color='#fff';
-f.style.color='#be123c';f.innerText='❌ Неверно!';
-}
-document.getElementById('qscr').innerText=Верно: ${sc};
-document.getElementById('nxt').classList.remove('hid');
-}
+function tab(id,b){['a','w','q','v'].forEach(x=>document.getElementById(x).classList.add('hid'));document.getElementById(id).classList.remove('hid');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('act'));b.classList.add('act');}
+function getQL(){if(lvl==='m')return qDB.m;if(lvl==='h')return qDB.h;return qDB.e;}
+function loadQ(){const l=getQL();if(qi>=l.length){okSnd();spk('Gratulerer! Du er kjempeflink!');document.getElementById('qbox').classList.add('hid');document.getElementById('pay').classList.remove('hid');return;}let c=null;l.forEach((it,i)=>{if(i===qi)c=it;});document.getElementById('qcnt').innerText=`Вопрос ${qi+1}/20 (Бесплатно)`;document.getElementById('qscr').innerText=`Верно: ${sc}`;document.getElementById('qtxt').innerText=c.q;document.getElementById('qfb').innerText='';document.getElementById('nxt').classList.add('hid');document.getElementById('qopts').innerHTML=`<button class="qopt" onclick="chk(this,${c.a===1})">${c.o1}</button><button class="qopt" onclick="chk(this,${c.a===2})">${c.o2}</button><button class="qopt" onclick="chk(this,${c.a===3})">${c.o3}</button>`;}
+function chk(b,ok){document.querySelectorAll('.qopt').forEach(x=>x.disabled=true);const f=document.getElementById('qfb');if(ok){sc++;okSnd();spk('Det er veldig bra! Kjempefint!');b.style.background='#10b981';b.style.color='#fff';f.style.color='#047857';f.innerText='✅ Det er veldig bra! (Это очень хорошо!)';}else{errSnd();spk('Prøv igjen!');b.style.background='#e11d48';b.style.color='#fff';f.style.color='#be123c';f.innerText='❌ Неверно!';}document.getElementById('qscr').innerText=`Верно: ${sc}`;document.getElementById('nxt').classList.remove('hid');}
 function nxtQ(){qi++;loadQ();}
-function vip(){
-const msg='Пришли платную ссылку за 100 Звёзд на твой закрытый VIP-канал, и я вставлю её сюда!';
-if(tg&&tg.showAlert){tg.showAlert(msg);}else{alert(msg);}
-}
+function vip(){const m='Пришли платную ссылку за 100 Звёзд на твой закрытый VIP-канал, и я вставлю её сюда!';if(tg&&tg.showAlert)tg.showAlert(m);else alert(m);}
+</script>
+</body>
+</html>
