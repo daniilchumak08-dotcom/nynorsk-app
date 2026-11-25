@@ -1,588 +1,104 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nynorsk 3D Trener</title>
-    <script src="https://telegram.org"></script>
-    <style>
-        :root {
-            --bg: #eef2ff;
-            --text: #1e1b4b;
-            --hint: #64748b;
-            --card: #ffffff;
-            --red: #e11d48;
-            --red-dark: #9f1239;
-            --blue: #1d4ed8;
-            --blue-dark: #1e3a8a;
-            --green: #10b981;
-            --green-dark: #047857;
-            --gold: #f59e0b;
-            --gold-dark: #b45309;
-        }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(180deg, #dbeafe 0%, #f8fafc 100%);
-            color: var(--text);
-            margin: 0;
-            padding: 16px;
-            padding-bottom: 60px;
-            min-height: 100vh;
-        }
-
-        /* 3D Шапка */
-        .header {
-            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #e11d48 100%);
-            color: white;
-            padding: 18px;
-            border-radius: 22px;
-            margin-bottom: 18px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 8px 0 #172554, 0 12px 20px rgba(30, 58, 138, 0.3);
-        }
-        .header h1 { margin: 0; font-size: 21px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-        .header p { margin: 4px 0 0 0; font-size: 13px; opacity: 0.95; font-weight: 500; }
-
-        .top-controls { display: flex; gap: 8px; }
-        .mini-3d-btn {
-            background: rgba(255,255,255,0.25);
-            border: 2px solid rgba(255,255,255,0.5);
-            color: white;
-            padding: 8px 10px;
-            border-radius: 14px;
-            font-size: 12px;
-            font-weight: 800;
-            cursor: pointer;
-            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
-            transition: all 0.1s;
-        }
-        .mini-3d-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,0.2); }
-
-        /* 3D Карточки выбора уровня */
-        .level-card {
-            background: var(--card);
-            padding: 18px;
-            border-radius: 22px;
-            margin-bottom: 16px;
-            cursor: pointer;
-            border: 2px solid #e2e8f0;
-            box-shadow: 0 7px 0 #cbd5e1, 0 12px 20px rgba(0,0,0,0.06);
-            transition: all 0.1s;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-        .level-card:active { transform: translateY(5px); box-shadow: 0 2px 0 #cbd5e1; }
-        .level-icon {
-            font-size: 38px;
-            background: #f1f5f9;
-            width: 64px;
-            height: 64px;
-            border-radius: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: inset 0 -4px 0 rgba(0,0,0,0.08);
-            flex-shrink: 0;
-        }
-        .level-card.easy { border-color: #6ee7b7; box-shadow: 0 7px 0 #10b981; }
-        .level-card.mid { border-color: #fcd34d; box-shadow: 0 7px 0 #f59e0b; }
-        .level-card.hard { border-color: #fda4af; box-shadow: 0 7px 0 #e11d48; }
-        .level-title { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
-        .level-desc { font-size: 13px; color: var(--hint); line-height: 1.4; }
-
-        /* 3D Вкладки */
-        .tabs { display: flex; gap: 8px; margin-bottom: 18px; }
-        .tab {
-            flex: 1; padding: 12px 6px; border: 2px solid #cbd5e1; border-radius: 16px;
-            background: white; color: var(--text); font-weight: 800;
-            font-size: 13px; cursor: pointer;
-            box-shadow: 0 5px 0 #cbd5e1;
-            transition: all 0.1s;
-        }
-        .tab:active { transform: translateY(4px); box-shadow: 0 1px 0 #cbd5e1; }
-        .tab.active {
-            background: linear-gradient(180deg, #3b82f6, #1d4ed8);
-            color: white;
-            border-color: #1e40af;
-            box-shadow: 0 5px 0 #1e3a8a;
-        }
-
-        /* 3D Карточки слов */
-        .card {
-            background: white; padding: 18px; border-radius: 22px;
-            margin-bottom: 16px; border: 2px solid #e2e8f0;
-            box-shadow: 0 6px 0 #cbd5e1;
-        }
-        .card-top { display: flex; justify-content: space-between; align-items: center; }
-        .word-title { font-size: 22px; font-weight: 900; color: var(--red); }
-        .speak-btn {
-            background: linear-gradient(180deg, #60a5fa, #2563eb);
-            color: white; border: none; border-radius: 14px;
-            width: 44px; height: 44px; font-size: 20px; cursor: pointer;
-            box-shadow: 0 4px 0 #1e40af;
-            transition: all 0.1s;
-        }
-        .speak-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #1e40af; }
-        .sub-info { font-size: 12px; color: var(--hint); font-weight: 700; margin: 4px 0 8px 0; }
-        .translation { font-size: 17px; font-weight: 700; margin-bottom: 10px; }
-        .example {
-            font-size: 14px; background: #f1f5f9; border-left: 4px solid #3b82f6;
-            padding: 10px 12px; border-radius: 10px; font-weight: 500;
-        }
-
-        /* 3D Алфавит */
-        .alpha-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px;
-        }
-        .alpha-box {
-            background: white; padding: 14px 8px; border-radius: 18px;
-            text-align: center; border: 2px solid #e2e8f0;
-            box-shadow: 0 5px 0 #cbd5e1; cursor: pointer;
-            transition: all 0.1s;
-        }
-        .alpha-box:active { transform: translateY(4px); box-shadow: 0 1px 0 #cbd5e1; }
-        .alpha-box.special {
-            background: linear-gradient(180deg, #fff1f2, #ffe4e6);
-            border-color: #fb7185; box-shadow: 0 5px 0 #e11d48;
-        }
-        .alpha-letter { font-size: 24px; font-weight: 900; color: var(--blue); }
-        .alpha-sound { font-size: 11px; color: var(--hint); font-weight: 700; margin-top: 4px; }
-
-        /* 3D Тест и кнопки */
-        .progress-bar {
-            background: #e2e8f0; height: 12px; border-radius: 8px;
-            margin-bottom: 16px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .progress-fill {
-            background: linear-gradient(90deg, #10b981, #34d399);
-            height: 100%; width: 5%; transition: width 0.3s; border-radius: 8px;
-        }
-        .quiz-option {
-            display: block; width: 100%; text-align: left; padding: 14px 16px;
-            margin-top: 10px; border: 2px solid #cbd5e1;
-            border-radius: 16px; background: white; color: var(--text);
-            font-size: 16px; font-weight: 700; cursor: pointer;
-            box-shadow: 0 5px 0 #cbd5e1; transition: all 0.1s;
-        }
-        .quiz-option:active { transform: translateY(4px); box-shadow: 0 1px 0 #cbd5e1; }
-
-        .btn-3d {
-            width: 100%; padding: 16px; border: none; border-radius: 18px;
-            background: linear-gradient(180deg, #f43f5e, #e11d48);
-            color: white; font-size: 16px; font-weight: 900; cursor: pointer;
-            margin-top: 14px; box-shadow: 0 6px 0 #9f1239;
-            transition: all 0.1s; text-transform: uppercase; letter-spacing: 0.5px;
-        }
-        .btn-3d:active { transform: translateY(4px); box-shadow: 0 2px 0 #9f1239; }
-
-        .btn-3d.gold {
-            background: linear-gradient(180deg, #fbbf24, #f59e0b);
-            color: #451a03; box-shadow: 0 6px 0 #b45309;
-        }
-        .btn-3d.gold:active { box-shadow: 0 2px 0 #b45309; }
-
-        .paywall {
-            text-align: center; padding: 26px 18px;
-            border: 3px solid #f59e0b; background: white; border-radius: 24px;
-            box-shadow: 0 8px 0 #d97706;
-        }
-        .hidden { display: none; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Nynorsk 3D</title>
+<script src="https://telegram.org"></script>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,sans-serif;background:linear-gradient(180deg,#dbeafe,#f8fafc);color:#1e1b4b;margin:0;padding:16px 16px 60px;min-height:100vh}
+.hdr{background:linear-gradient(135deg,#1e3a8a,#2563eb 50%,#e11d48);color:#fff;padding:18px;border-radius:22px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 8px 0 #172554}
+.hdr h1{margin:0;font-size:20px}.hdr p{margin:4px 0 0;font-size:13px}
+.mbtn{background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.5);color:#fff;padding:8px 10px;border-radius:14px;font-size:12px;font-weight:800;box-shadow:0 4px 0 rgba(0,0,0,.2)}
+.mbtn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.2)}
+.lcard{background:#fff;padding:16px;border-radius:22px;margin-bottom:14px;border:2px solid #e2e8f0;box-shadow:0 7px 0 #cbd5e1;display:flex;align-items:center;gap:14px;cursor:pointer}
+.lcard:active{transform:translateY(5px);box-shadow:0 2px 0 #cbd5e1}
+.lcard.e{border-color:#6ee7b7;box-shadow:0 7px 0 #10b981}.lcard.m{border-color:#fcd34d;box-shadow:0 7px 0 #f59e0b}.lcard.h{border-color:#fda4af;box-shadow:0 7px 0 #e11d48}
+.licon{font-size:34px;background:#f1f5f9;width:58px;height:58px;border-radius:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tabs{display:flex;gap:6px;margin-bottom:16px}
+.tab{flex:1;padding:11px 4px;border:2px solid #cbd5e1;border-radius:15px;background:#fff;color:#1e1b4b;font-weight:800;font-size:12px;box-shadow:0 5px 0 #cbd5e1}
+.tab.act{background:linear-gradient(180deg,#3b82f6,#1d4ed8);color:#fff;border-color:#1e40af;box-shadow:0 5px 0 #1e3a8a}
+.card{background:#fff;padding:16px;border-radius:22px;margin-bottom:14px;border:2px solid #e2e8f0;box-shadow:0 6px 0 #cbd5e1}
+.sbtn{background:linear-gradient(180deg,#60a5fa,#2563eb);color:#fff;border:none;border-radius:14px;width:42px;height:42px;font-size:18px;box-shadow:0 4px 0 #1e40af}
+.agrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.abox{background:#fff;padding:12px 6px;border-radius:16px;text-align:center;border:2px solid #e2e8f0;box-shadow:0 5px 0 #cbd5e1}
+.abox.sp{background:#fff1f2;border-color:#fb7185;box-shadow:0 5px 0 #e11d48}
+.qopt{display:block;width:100%;text-align:left;padding:13px;margin-top:9px;border:2px solid #cbd5e1;border-radius:15px;background:#fff;font-size:15px;font-weight:700;box-shadow:0 5px 0 #cbd5e1}
+.btn3d{width:100%;padding:15px;border:none;border-radius:18px;background:linear-gradient(180deg,#f43f5e,#e11d48);color:#fff;font-size:15px;font-weight:900;margin-top:14px;box-shadow:0 6px 0 #9f1239}
+.btn3d.gold{background:linear-gradient(180deg,#fbbf24,#f59e0b);color:#451a03;box-shadow:0 6px 0 #b45309}
+.hid{display:none}
+</style>
 </head>
 <body>
-
-<div class="header">
-    <div>
-        <h1>🇳🇴 Nynorsk 3D</h1>
-        <p id="welcome">Velkommen til Sogndal!</p>
-    </div>
-    <div class="top-controls">
-        <button id="music-btn" class="mini-3d-btn" onclick="toggleMusic()">🔇 Музыка</button>
-        <button id="change-lvl-btn" class="mini-3d-btn hidden" onclick="playClick(); resetLevel()">Уровень</button>
-    </div>
+<div class="hdr">
+<div><h1>🇳🇴 Nynorsk 3D</h1><p id="wlc">Velkommen til Sogndal!</p></div>
+<div style="display:flex;gap:6px"><button id="mbtn" class="mbtn" onclick="togMus()">🔇 Музыка</button><button id="lvlbtn" class="mbtn hid" onclick="clk();rstLvl()">Уровень</button></div>
 </div>
 
-<!-- ЭКРАН 0: ВЫБОР УРОВНЯ -->
-<div id="level-screen">
-    <h3 style="margin-top:0; font-weight:900;">🚀 Выбери свой уровень:</h3>
-    <div class="level-card easy" onclick="playClick(); selectLevel('easy')">
-        <div class="level-icon">🌱</div>
-        <div>
-            <div class="level-title">Новичок (с нуля)</div>
-            <div class="level-desc">3D-алфавит (Æ, Ø, Å), озвучка букв, самые лёгкие слова и базовый тест.</div>
-        </div>
-    </div>
-    <div class="level-card mid" onclick="playClick(); selectLevel('mid')">
-        <div class="level-icon">🏔️</div>
-        <div>
-            <div class="level-title">Средний уровень</div>
-            <div class="level-desc">Разговорные фразы, глаголы и главные отличия Nynorsk от Bokmål.</div>
-        </div>
-    </div>
-    <div class="level-card hard" onclick="playClick(); selectLevel('hard')">
-        <div class="level-icon">👑</div>
-        <div>
-            <div class="level-title">Продвинутый (B2+)</div>
-            <div class="level-desc">Сложная лексика, диалекты Западной Норвегии и подготовка к экзамену.</div>
-        </div>
-    </div>
+<div id="scr-lvl">
+<h3 style="margin-top:0">🚀 Выбери свой уровень:</h3>
+<div class="lcard e" onclick="clk();selLvl('e')"><div class="licon">🌱</div><div><b>Новичок (с нуля)</b><br><small>Алфавит (Æ, Ø, Å), озвучка, лёгкие слова и тест</small></div></div>
+<div class="lcard m" onclick="clk();selLvl('m')"><div class="licon">🏔️</div><div><b>Средний уровень</b><br><small>Глаголы, разговорные фразы и отличия от Bokmål</small></div></div>
+<div class="lcard h" onclick="clk();selLvl('h')"><div class="licon">👑</div><div><b>Продвинутый (B2+)</b><br><small>Сложная лексика и подготовка к Norskprøven</small></div></div>
 </div>
 
-<!-- ОСНОВНОЕ ПРИЛОЖЕНИЕ -->
-<div id="main-app" class="hidden">
-    <div class="tabs">
-        <button id="tab-alpha-btn" class="tab" onclick="playClick(); showTab('alpha', this)">🔤 Алфавит</button>
-        <button id="tab-words-btn" class="tab active" onclick="playClick(); showTab('words', this)">📚 Слова</button>
-🎯 Тест (20)
-⭐ VIP
-Норвежский алфавит (29 букв)
-Нажимай на любую карточку — она сработает как 3D-кнопка и озвучит букву на норвежском! Красным выделены 3 особые буквы: Æ, Ø, Å.
-Æ æКак «Э» 🔊
-Ø øКак «Ё» 🔊
-Å åДолгое «О» 🔊
-A a[а] 🔊
-B b[б] 🔊
-C c[с / к] 🔊
-D d[д] 🔊
-E e[э / е] 🔊
-F f[ф] 🔊
-G g[г / й] 🔊
-H h[х] 🔊
-I i[и] 🔊
-J j[й] 🔊
-K k[к / хь] 🔊
-L l[л] 🔊
-M m[м] 🔊
-N n[н] 🔊
-O o[у / о] 🔊
-P p[п] 🔊
-R r[р] 🔊
-S s[с] 🔊
-T t[т] 🔊
-U u[у / ю] 🔊
-V v[в] 🔊
-Y yМягкое [ю] 🔊
+<div id="app" class="hid">
+<div class="tabs">
+<button id="t-a" class="tab" onclick="clk();tab('a',this)">🔤 Алфавит</button>
+<button id="t-w" class="tab act" onclick="clk();tab('w',this)">📚 Слова</button>
+<button id="t-q" class="tab" onclick="clk();tab('q',this)">🎯 Тест (20)</button>
+<button id="t-v" class="tab" onclick="clk();tab('v',this)">⭐ VIP</button>
+</div>
+<div id="a" class="hid"><div class="card"><b>Особые буквы: Æ, Ø, Å (нажми для озвучки)</b></div><div id="agrid" class="agrid"></div></div>
+<div id="w"></div>
+<div id="q" class="hid">
+<div id="qbox" class="card">
+<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:800;margin-bottom:10px"><span id="qcnt">Вопрос 1/20</span><span id="qscr" style="color:#10b981">Верно: 0</span></div>
+<div id="qtxt" style="font-size:18px;font-weight:900"></div><div id="qopts"></div><p id="qfb" style="font-weight:800"></p>
+<button id="nxt" class="btn3d hid" onclick="clk();nxtQ()">Дальше ➔</button>
+</div>
+<div id="pay" class="card hid" style="text-align:center;border:3px solid #f59e0b">
+<div style="font-size:44px">🏆🔒</div><h3>20 бесплатных вопросов пройдено!</h3>
+<p>Открой 500+ заданий, все правила и озвучку на 1 месяц:</p>
+<button class="btn3d gold" onclick="clk();vip()">⭐ Открыть за 100 Звёзд / мес</button>
+</div>
+</div>
+<div id="v" class="hid"><div class="card" style="border:3px solid #f59e0b">
+<h3>👑 Nynorsk PRO Подписка</h3><p>Первые 20 вопросов бесплатны. Полный доступ открывает все уроки, 500+ тестов и закрытый клуб:</p>
+<button class="btn3d gold" onclick="clk();vip()">⭐ Подписаться за 100 Звёзд / мес</button>
+</div></div>
+</div>
 
-Вопрос 1 из 20 (Бесплатно)
-Верно: 0
+<script>
+const tg=window.Telegram.WebApp;tg.expand();
+if(tg.initDataUnsafe?.user)document.getElementById('wlc').innerText='Hei, '+tg.initDataUnsafe.user.first_name+'!';
+let ctx=null,mus=false,mint=null,lvl='e',qi=0,sc=0;
+function au(){try{if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();if(ctx.state==='suspended')ctx.resume()}catch(e){}}
+function clk(){au();if(!ctx)return;const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.setValueAtTime(500,ctx.currentTime);o.frequency.exponentialRampToValueAtTime(180,ctx.currentTime+.06);g.gain.setValueAtTime(.2,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.01,ctx.currentTime+.06);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.06)}
+function okSnd(){au();if(!ctx)return;[523,659,784,1046].forEach((f,i)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.type='triangle';o.frequency.setValueAtTime(f,ctx.currentTime+i*.07);g.gain.setValueAtTime(.2,ctx.currentTime+i*.07);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+i*.07+.3);o.connect(g);g.connect(ctx.destination);o.start(ctx.currentTime+i*.07);o.stop(ctx.currentTime+i*.07+.3)})}
+function errSnd(){au();if(!ctx)return;const o=ctx.createOscillator(),g=ctx.createGain();o.type='sawtooth';o.frequency.setValueAtTime(200,ctx.currentTime);g.gain.setValueAtTime(.15,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.2);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.2)}
+function togMus(){au();const b=document.getElementById('mbtn');if(!mus){mus=true;b.innerText='🎵 Музыка';let s=0;mint=setInterval(()=>{if(!mus||!ctx)return;const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.setValueAtTime([261,329,392,493,392,329][s%6],ctx.currentTime);g.gain.setValueAtTime(.05,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.45);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.45);s++},500)}else{mus=false;b.innerText='🔇 Музыка';clearInterval(mint)}}
+function spk(t){try{if('speechSynthesis'in window){window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='nb-NO';window.speechSynthesis.speak(u)}}catch(e){}}
 
+const alpha=[['Æ æ','Э',1,'Ære'],['Ø ø','Ё',1,'Øy'],['Å å','О',1,'År'],['A a','а',0,'A'],['B b','б',0,'B'],['D d','д',0,'D'],['E e','э',0,'E'],['F f','ф',0,'F'],['G g','г/й',0,'G'],['H h','х',0,'H'],['I i','и',0,'I'],['J j','й',0,'J'],['K k','к/хь',0,'K'],['L l','л',0,'L'],['M m','м',0,'M'],['N n','н',0,'N'],['O o','у/о',0,'O'],['P p','п',0,'P'],['R r','р',0,'R'],['S s','с',0,'S'],['T t','т',0,'T'],['U u','у/ю',0,'U'],['V v','в',0,'V'],['Y y','ю',0,'Y']];
+document.getElementById('agrid').innerHTML=alpha.map(x=>`<div class="abox ${x[2]?'sp':''}" onclick="clk();spk('${x[3]}')"><b style="font-size:22px;color:#1d4ed8">${x[0]}</b><br><small>[${x[1]}] 🔊</small></div>`).join('');
 
-
-Дальше ➔
-🏆🔒
-20 бесплатных вопросов пройдено!
-Ты круто справляешься! Чтобы открыть следующие 500+ заданий, все уровни грамматики и подготовку к экзамену Norskprøven, активируй полную версию.
-⭐ Открыть полный доступ за 100 Звёзд
-
-👑 NYNORSK PRO КЛУБ
-Полный доступ ко всем урокам
-Первые 20 вопросов в тесте бесплатны. Подписка открывает всё приложение на 1 месяц:
-• 🎯 Безлимитные тесты (500+ вопросов)
-• 🗣️ Полный словарь Nynorsk с озвучкой
-• 📘 Грамматика, глаголы и диалекты Согндала
-• 🎓 Тренажёр экзамена Norskprøven
-⭐ Подписаться за 100 Звёзд / мес
-
-
-const tg = window.Telegram.WebApp;
-tg.expand();
-if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-document.getElementById('welcome').innerText = Hei, ${tg.initDataUnsafe.user.first_name}!;
-}
-// --- ЗВУКОВОЙ ДВИЖОК (Web Audio API - работает без внешних файлов!) ---
-const AudioCtx = window.AudioContext || window.webkitAudioContext;
-let audioCtx = null;
-let musicPlaying = false;
-let musicInterval = null;
-function initAudio() {
-if (!audioCtx) audioCtx = new AudioCtx();
-if (audioCtx.state === 'suspended') audioCtx.resume();
-}
-// Приятный 3D-клик при нажатии кнопок
-function playClick() {
-initAudio();
-const osc = audioCtx.createOscillator();
-const gain = audioCtx.createGain();
-osc.type = 'sine';
-osc.frequency.setValueAtTime(520, audioCtx.currentTime);
-osc.frequency.exponentialRampToValueAtTime(180, audioCtx.currentTime + 0.06);
-gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.06);
-osc.connect(gain);
-gain.connect(audioCtx.destination);
-osc.start();
-osc.stop(audioCtx.currentTime + 0.06);
-}
-// Победный аккорд при правильном ответе
-function playSuccessSound() {
-initAudio();
-const notes = [523.25, 659.25, 783.99, 1046.50]; // До-Ми-Соль-До
-notes.forEach((freq, i) => {
-const osc = audioCtx.createOscillator();
-const gain = audioCtx.createGain();
-osc.type = 'triangle';
-osc.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.07);
-gain.gain.setValueAtTime(0.15, audioCtx.currentTime + i * 0.07);
-gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * 0.07 + 0.3);
-osc.connect(gain);
-gain.connect(audioCtx.destination);
-osc.start(audioCtx.currentTime + i * 0.07);
-osc.stop(audioCtx.currentTime + i * 0.07 + 0.3);
-});
-}
-// Мягкий звук ошибки
-function playErrorSound() {
-initAudio();
-const osc = audioCtx.createOscillator();
-const gain = audioCtx.createGain();
-osc.type = 'sawtooth';
-osc.frequency.setValueAtTime(220, audioCtx.currentTime);
-osc.frequency.linearRampToValueAtTime(150, audioCtx.currentTime + 0.2);
-gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
-osc.connect(gain);
-gain.connect(audioCtx.destination);
-osc.start();
-osc.stop(audioCtx.currentTime + 0.2);
-}
-// Лёгкая фоновая музыка
-function toggleMusic() {
-initAudio();
-const btn = document.getElementById('music-btn');
-if (!musicPlaying) {
-musicPlaying = true;
-btn.innerText = '🎵 Музыка';
-const melody = [261.63, 329.63, 392.00, 493.88, 392.00, 329.63];
-let step = 0;
-musicInterval = setInterval(() => {
-if (!musicPlaying) return;
-const osc = audioCtx.createOscillator();
-const gain = audioCtx.createGain();
-osc.type = 'sine';
-osc.frequency.setValueAtTime(melody[step % melody.length], audioCtx.currentTime);
-gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.45);
-osc.connect(gain);
-gain.connect(audioCtx.destination);
-osc.start();
-osc.stop(audioCtx.currentTime + 0.45);
-step++;
-}, 500);
-} else {
-musicPlaying = false;
-btn.innerText = '🔇 Музыка';
-clearInterval(musicInterval);
-}
-}
-// Озвучка на норвежском
-function speak(text) {
-if ('speechSynthesis' in window) {
-window.speechSynthesis.cancel();
-const u = new SpeechSynthesisUtterance(text);
-u.lang = 'nb-NO';
-u.rate = 0.95;
-window.speechSynthesis.speak(u);
-}
-}
-let currentLevel = 'easy';
-let qIndex = 0;
-let score = 0;
-const wordsData = {
-easy: [
-{ w: "Hei!", b: "Hei!", t: "Привет!", ex: "Hei! Korleis går det? — Привет! Как дела?" },
-{ w: "Takk", b: "Takk", t: "Спасибо", ex: "Tusen takk! — Большое спасибо!" },
-{ w: "Ja / Nei", b: "Ja / Nei", t: "Да / Нет", ex: "Ja, eg forstår. — Да, я понимаю." },
-{ w: "Eg", b: "Jeg", t: "Я", ex: "Eg heiter Daniil. — Меня зовут Даниил." },
-{ w: "Ikkje", b: "Ikke", t: "Не (отрицание)", ex: "Eg veit ikkje. — Я не знаю." },
-{ w: "Mat / Vatn", b: "Mat / Vann", t: "Еда / Вода", ex: "Kan eg få eit glas vatn? — Можно стакан воды?" },
-{ w: "Ein dag", b: "En dag", t: "Один день", ex: "Ha ein fin dag! — Хорошего дня!" }
-],
-mid: [
-{ w: "Å vere", b: "Å være", t: "Быть, находиться", ex: "Det er fint vêr i Sogndal i dag. — В Согндале сегодня хорошая погода." },
-{ w: "Kva / Kven / Korleis", b: "Hva / Hvem / Hvordan", t: "Что / Кто / Как", ex: "Kva gjer du no? — Что ты сейчас делаешь?" },
-{ w: "Å snakke", b: "Å snakke", t: "Говорить (snakkar)", ex: "Eg snakkar litt norsk. — Я немного говорю по-норвежски." },
-{ w: "Å køyre", b: "Å kjøre", t: "Ехать / водить машину", ex: "Vi køyrer til fjorden. — Мы едем к фьорду." },
-{ w: "Mykje", b: "Mye", t: "Много", ex: "Det er mykje snø på fjellet. — В горах много снега." }
-],
-hard: [
-{ w: "Å føretrekkje", b: "Å foretrekke", t: "Предпочитать", ex: "Eg føretrekkjer å skrive nynorsk. — Я предпочитаю писать на нюношке." },
-{ w: "Sjølvsagt", b: "Selvfølgelig", t: "Разумеется, конечно", ex: "Sjølvsagt kan eg hjelpe deg! — Конечно, я могу тебе помочь!" },
-{ w: "Å hugse", b: "Å huske", t: "Помнить", ex: "Hugsar du kva ho sa? — Ты помнишь, что она сказала?" },
-{ w: "Å gjere", b: "Å gjøre", t: "Делать (gjer)", ex: "Kva skal vi gjere i helga? — Что будем делать на выходных?" }
-]
+const words={
+e:[['Hei!','Hei!','Привет!','Hei! Korleis går det?'],['Takk','Takk','Спасибо','Tusen takk!'],['Ja / Nei','Ja / Nei','Да / Нет','Ja, eg forstår.'],['Eg','Jeg','Я','Eg heiter Daniil.'],['Ikkje','Ikke','Не','Eg veit ikkje.'],['Vatn','Vann','Вода','Eit glas vatn.']],
+m:[['Å vere','Å være','Быть','Det er fint vêr i Sogndal.'],['Kva / Kven','Hva / Hvem','Что / Кто','Kva gjer du no?'],['Å snakke','Å snakke','Говорить (snakkar)','Eg snakkar norsk.'],['Mykje','Mye','Много','Mykje snø på fjellet.']],
+h:[['Å føretrekkje','Å foretrekke','Предпочитать','Eg føretrekkjer nynorsk.'],['Sjølvsagt','Selvfølgelig','Разумеется','Sjølvsagt kan eg hjelpe!'],['Å hugse','Å huske','Помнить','Hugsar du det?'],['Å gjere','Å gjøre','Делать (gjer)','Kva skal vi gjere?']]
 };
-const questionsData = {
-easy: [
-{ q: "1. Как переводится слово «Hei»?", o: ["Пока", "Привет", "Спасибо"], a: 1 },
-{ q: "2. Сколько букв в норвежском алфавите?", o: ["26", "29", "33"], a: 1 },
-{ q: "3. Как на Nynorsk будет «Я»?", o: ["Jeg", "Eg", "Ik"], a: 1 },
-{ q: "4. Как сказать «Спасибо»?", o: ["Takk", "Unnskyld", "Vær så god"], a: 0 },
-{ q: "5. Как пишется слово «Не» на Nynorsk?", o: ["Ikke", "Ikkje", "Inte"], a: 1 },
-{ q: "6. Какая буква читается примерно как русское «Ё»?", o: ["Æ", "Ø", "Å"], a: 1 },
-{ q: "7. Переведи: «Vatn»", o: ["Огонь", "Вода", "Хлеб"], a: 1 },
-{ q: "8. Как сказать «Да»?", o: ["Nei", "Ja", "Kanskje"], a: 1 },
-{ q: "9. Переведи фразу: «Eg heiter...»", o: ["Я живу...", "Меня зовут...", "Я хочу..."], a: 1 },
-{ q: "10. Как сказать «До свидания / Пока»?", o: ["Ha det!", "God natt", "Takk"], a: 0 },
-{ q: "11. Как на Nynorsk будет «Один» (муж. род)?", o: ["En", "Ein", "Eit"], a: 1 },
-{ q: "12. Переведи: «Mat»", o: ["Мать", "Еда", "Дом"], a: 1 },
-{ q: "13. Какая буква стоит самой последней в алфавите?", o: ["Ø", "Æ", "Å"], a: 2 },
-{ q: "14. Переведи: «God morgon»", o: ["Добрый вечер", "Доброе утро", "Спокойной ночи"], a: 1 },
-{ q: "15. Как сказать «Я не понимаю»?", o: ["Eg forstår ikkje", "Jeg forstår ikke", "Eg veit"], a: 0 },
-{ q: "16. Переведи: «Noreg»", o: ["Швеция", "Норвегия", "Дания"], a: 1 },
-{ q: "17. Как будет «Дом»?", o: ["Bil", "Hus", "Bok"], a: 1 },
-{ q: "18. Переведи: «Tusen takk»", o: ["Пожалуйста", "Большое спасибо", "Извините"], a: 1 },
-{ q: "19. Как сказать «Нет»?", o: ["Ja", "Nei", "Bra"], a: 1 },
-{ q: "20. Переведи: «Bra»", o: ["Плохо", "Хорошо", "Быстро"], a: 1 }
-],
-mid: [
-{ q: "1. Как на Nynorsk пишется вопрос «Что?»?", o: ["Hva", "Kva", "Vem"], a: 1 },
-{ q: "2. Выбери правильное окончание: «Eg snakk__ norsk»", o: ["-er", "-ar", "-or"], a: 1 },
-{ q: "3. Как переводится «Korleis»?", o: ["Где", "Как", "Когда"], a: 1 },
-{ q: "4. Инфинитив глагола «Быть» на Nynorsk:", o: ["Å være", "Å vere", "Å vara"], a: 1 },
-{ q: "5. Как будет «Много» на Nynorsk?", o: ["Mye", "Mykje", "Mange"], a: 1 },
-{ q: "6. Переведи: «Kven er det?»", o: ["Что это?", "Кто это?", "Где это?"], a: 1 },
-{ q: "7. Неопределённый артикль среднего рода:", o: ["Ein", "Ei", "Eit"], a: 2 },
-{ q: "8. Как сказать «Ехать на машине» на Nynorsk?", o: ["Å kjøre", "Å køyre", "Å gå"], a: 1 },
-{ q: "9. Переведи: «Vêr»", o: ["Ветер", "Погода", "Время"], a: 1 },
-{ q: "10. Как будет «Мы» на Nynorsk?", o: ["Vi / Me", "De", "Dei"], a: 0 },
-{ q: "11. Как сказать «Они» на Nynorsk?", o: ["De", "Dei", "Dem"], a: 1 },
-{ q: "12. Переведи: «Å lese»", o: ["Писать", "Читать", "Слушать"], a: 1 },
-{ q: "13. Как будет «Девочка» (жен. род) с артиклем?", o: ["En jente", "Ei jente", "Eit jente"], a: 1 },
-{ q: "14. Переведи: «I dag»", o: ["Вчера", "Сегодня", "Завтра"], a: 1 },
-{ q: "15. Как сказать «Завтра»?", o: ["I går", "I dag", "I morgon"], a: 2 },
-{ q: "16. Выбери правильный перевод: «Å arbeide»", o: ["Отдыхать", "Работать", "Учиться"], a: 1 },
-{ q: "17. Как на Nynorsk будет «Неделя»?", o: ["Uke", "Veke", "Månad"], a: 1 },
-{ q: "18. Переведи: «Fjell»", o: ["Море", "Гора", "Лес"], a: 1 },
-{ q: "19. Как сказать «Снег»?", o: ["Regn", "Snø", "Sol"], a: 1 },
-{ q: "20. Переведи: «Å bu»", o: ["Строить", "Жить (проживать)", "Покупать"], a: 1 }
-],
-hard: [
-{ q: "1. Как на Nynorsk будет «Предпочитать»?", o: ["Å foretrekke", "Å føretrekkje", "Å like best"], a: 1 },
-{ q: "2. Настоящее время от глагола «Å gjere»:", o: ["Gjør", "Gjer", "Gjerer"], a: 1 },
-{ q: "3. Как переводится «Sjølvsagt»?", o: ["Сложно", "Разумеется", "Внезапно"], a: 1 },
-{ q: "4. Переведи: «Å hugse»", o: ["Забывать", "Помнить", "Думать"], a: 1 },
-{ q: "5. Как будет «Разница» на Nynorsk?", o: ["Forskjell", "Skilnad", "Likskap"], a: 1 },
-{ q: "6. Переведи: «Å oppleve»", o: ["Переживать / испытывать", "Опаздывать", "Открывать"], a: 0 },
-{ q: "7. Как на Nynorsk пишется «Собственный»?", o: ["Egen", "Eigen", "Eget"], a: 1 },
-{ q: "8. Выбери предлог: «Å vere glad ___ deg»", o: ["på", "i", "til"], a: 1 },
-{ q: "9. Переведи: «Framleis»", o: ["Назад", "Всё ещё / по-прежнему", "Впервые"], a: 1 },
-{ q: "10. Как сказать «Общество» на Nynorsk?", o: ["Samfunn", "Storting", "Kommune"], a: 0 },
-{ q: "11. Переведи: «Å avgjere»", o: ["Отменять", "Решать (принимать решение)", "Обсуждать"], a: 1 },
-{ q: "12. Как будет «Язык» на Nynorsk?", o: ["Språk", "Mål / Språk", "Ord"], a: 1 },
-{ q: "13. Переведи: «Nøgd»", o: ["Недовольный", "Довольный", "Уставший"], a: 1 },
-{ q: "14. Как на Nynorsk будет «Вопрос»?", o: ["Spørsmål", "Svar", "Problem"], a: 0 },
-{ q: "15. Переведи: «Å verte»", o: ["Ждать", "Становиться (синоним å bli)", "Защищать"], a: 1 },
-{ q: "16. Как сказать «Возможность» на Nynorsk?", o: ["Mulighet", "Moglegheit", "Vanske"], a: 1 },
-{ q: "17. Переведи: «Trass i»", o: ["Благодаря", "Несмотря на", "Вместо"], a: 1 },
-{ q: "18. Как будет «Опыт» на Nynorsk?", o: ["Erfaring / Røynsle", "Kunnskap", "Utdanning"], a: 0 },
-{ q: "19. Переведи: «Å nytta»", o: ["Использовать", "Наслаждаться", "Менять"], a: 0 },
-{ q: "20. Как сказать «Правительство»?", o: ["Regjering", "Fylke", "Bygd"], a: 0 }
-]
+
+const qs={
+e:[['1. Перевод «Hei»?','Пока','Привет','Спасибо',1],['2. Букв в алфавите?','26','29','33',1],['3. «Я» на Nynorsk?','Jeg','Eg','Ik',1],['4. «Спасибо»?','Takk','Unnskyld','Bra',0],['5. «Не» на Nynorsk?','Ikke','Ikkje','Inte',1],['6. Буква как «Ё»?','Æ','Ø','Å',1],['7. «Vatn»?','Огонь','Вода','Хлеб',1],['8. «Да»?','Nei','Ja','Kanskje',1],['9. «Eg heiter...»?','Я живу','Меня зовут','Я хочу',1],['10. «Пока»?','Ha det!','God natt','Takk',0],['11. «Один» (муж. род)?','En','Ein','Eit',1],['12. «Mat»?','Мать','Еда','Дом',1],['13. Последняя буква алфавита?','Ø','Æ','Å',2],['14. «God morgon»?','Добрый вечер','Доброе утро','Спокойной ночи',1],['15. «Я не понимаю»?','Eg forstår ikkje','Jeg forstår ikke','Eg veit',0],['16. «Noreg»?','Швеция','Норвегия','Дания',1],['17. «Дом»?','Bil','Hus','Bok',1],['18. «Tusen takk»?','Пожалуйста','Большое спасибо','Извините',1],['19. «Нет»?','Ja','Nei','Bra',1],['20. «Bra»?','Плохо','Хорошо','Быстро',1]],
+m:[['1. «Что?» на Nynorsk?','Hva','Kva','Vem',1],['2. «Eg snakk__ norsk»?','-er','-ar','-or',1],['3. «Korleis»?','Где','Как','Когда',1],['4. «Быть» на Nynorsk?','Å være','Å vere','Å vara',1],['5. «Много»?','Mye','Mykje','Mange',1],['6. «Kven er det?»','Что это?','Кто это?','Где это?',1],['7. Артикль ср. рода?','Ein','Ei','Eit',2],['8. «Ехать на машине»?','Å kjøre','Å køyre','Å gå',1],['9. «Vêr»?','Ветер','Погода','Время',1],['10. «Мы» на Nynorsk?','Vi / Me','De','Dei',0],['11. «Они» на Nynorsk?','De','Dei','Dem',1],['12. «Å lese»?','Писать','Читать','Слушать',1],['13. «Девочка» с артиклем?','En jente','Ei jente','Eit jente',1],['14. «I dag»?','Вчера','Сегодня','Завтра',1],['15. «Завтра»?','I går','I dag','I morgon',2],['16. «Å arbeide»?','Отдыхать','Работать','Учиться',1],['17. «Неделя»?','Uke','Veke','Månad',1],['18. «Fjell»?','Море','Гора','Лес',1],['19. «Снег»?','Regn','Snø','Sol',1],['20. «Å bu»?','Строить','Жить','Покупать',1]],
+h:[['1. «Предпочитать»?','Å foretrekke','Å føretrekkje','Å like',1],['2. Наст. время «Å gjere»?','Gjør','Gjer','Gjerer',1],['3. «Sjølvsagt»?','Сложно','Разумеется','Внезапно',1],['4. «Å hugse»?','Забывать','Помнить','Думать',1],['5. «Разница»?','Forskjell','Skilnad','Likskap',1],['6. «Å oppleve»?','Испытывать','Опаздывать','Открывать',0],['7. «Собственный»?','Egen','Eigen','Eget',1],['8. «Å vere glad ___ deg»?','på','i','til',1],['9. «Framleis»?','Назад','Всё ещё','Впервые',1],['10. «Общество»?','Samfunn','Storting','Kommune',0],['11. «Å avgjere»?','Отменять','Решать','Обсуждать',1],['12. «Язык»?','Språk','Mål / Språk','Ord',1],['13. «Nøgd»?','Недовольный','Довольный','Уставший',1],['14. «Вопрос»?','Spørsmål','Svar','Problem',0],['15. «Å verte»?','Ждать','Становиться','Защищать',1],['16. «Возможность»?','Mulighet','Moglegheit','Vanske',1],['17. «Trass i»?','Благодаря','Несмотря на','Вместо',1],['18. «Опыт»?','Erfaring / Røynsle','Kunnskap','Utdanning',0],['19. «Å nytta»?','Использовать','Наслаждаться','Менять',0],['20. «Правительство»?','Regjering','Fylke','Bygd',0]]
 };
-function selectLevel(lvl) {
-currentLevel = lvl;
-document.getElementById('level-screen').classList.add('hidden');
-document.getElementById('main-app').classList.remove('hidden');
-document.getElementById('change-lvl-btn').classList.remove('hidden');
-const alphaBtn = document.getElementById('tab-alpha-btn');
-if (lvl === 'easy') {
-alphaBtn.classList.remove('hidden');
-showTab('alpha', alphaBtn);
-} else {
-alphaBtn.classList.add('hidden');
-showTab('words', document.getElementById('tab-words-btn'));
-}
-renderWords();
-resetQuiz();
-}
-function resetLevel() {
-document.getElementById('main-app').classList.add('hidden');
-document.getElementById('change-lvl-btn').classList.add('hidden');
-document.getElementById('level-screen').classList.remove('hidden');
-}
-function showTab(tabId, btn) {
-['alpha', 'words', 'quiz', 'vip'].forEach(id => document.getElementById(id).classList.add('hidden'));
-document.getElementById(tabId).classList.remove('hidden');
-document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-btn.classList.add('active');
-}
-function renderWords() {
-const container = document.getElementById('words');
-container.innerHTML = '';
-wordsData[currentLevel].forEach(item => {
-container.innerHTML += <div class="card"> <div class="card-top"> <div class="word-title">${item.w}</div> <button class="speak-btn" onclick="playClick(); speak('${item.w.replace(/'/g, "")}')">🔊</button> </div> <div class="sub-info">Bokmål: ${item.b}</div> <div class="translation">${item.t}</div> <div class="example">${item.ex}</div> </div>;
-});
-}
-function resetQuiz() {
-qIndex = 0;
-score = 0;
-document.getElementById('quiz-box').classList.remove('hidden');
-document.getElementById('paywall-box').classList.add('hidden');
-loadQuestion();
-}
-function loadQuestion() {
-const list = questionsData[currentLevel];
-if (qIndex >= list.length) {
-playSuccessSound();
-speak("Gratulerer! Du er kjempeflink!");
-document.getElementById('quiz-box').classList.add('hidden');
-document.getElementById('paywall-box').classList.remove('hidden');
-return;
-}
-const q = list[qIndex];
-document.getElementById('q-counter').innerText = Вопрос ${qIndex + 1} из 20 (Бесплатно);
-document.getElementById('q-score').innerText = Верно: ${score};
-document.getElementById('q-progress').style.width = ${((qIndex + 1) / 20) * 100}%;
-document.getElementById('q-text').innerText = q.q;
-document.getElementById('q-feedback').innerText = '';
-document.getElementById('next-q-btn').classList.add('hidden');
-const optDiv = document.getElementById('q-options');
-optDiv.innerHTML = '';
-q.o.forEach((optText, idx) => {
-const btn = document.createElement('button');
-btn.className = 'quiz-option';
-btn.innerText = optText;
-btn.onclick = () => checkAnswer(btn, idx === q.a);
-optDiv.appendChild(btn);
-});
-}
-function checkAnswer(btn, isCorrect) {
-const allBtns = document.querySelectorAll('.quiz-option');
-allBtns.forEach(b => b.disabled = true);
-const fb = document.getElementById('q-feedback');
-if (isCorrect) {
-score++;
-playSuccessSound();
-speak("Det er veldig bra! Kjempefint!");
-btn.style.background = 'linear-gradient(180deg, #34d399, #10b981)';
-btn.style.borderColor = '#047857';
-btn.style.boxShadow = '0 5px 0 #047857';
-btn.style.color = 'white';
-fb.style.color = '#047857';
-fb.innerText = '✅ Det er veldig bra! (Это очень хорошо!)';
-} else {
-playErrorSound();
-speak("Prøv igjen!");
-btn.style.background = 'linear-gradient(180deg, #fb7185, #e11d48)';
-btn.style.borderColor = '#9f1239';
-btn.style.boxShadow = '0 5px 0 #9f1239';
-btn.style.color = 'white';
-fb.style.color = '#be123c';
-fb.innerText = '❌ Неверно! Запоминай правильный вариант.';
-}
-document.getElementById('q-score').innerText = Верно: ${score};
-document.getElementById('next-q-btn').classList.remove('hidden');
-}
-function nextQuestion() {
-qIndex++;
-loadQuestion();
-    function buyVip() {
-        tg.showAlert("Пришли мне платную ссылку за 100 Звёзд на твой закрытый VIP-канал, и я вставлю её прямо в эту кнопку!");
-    }
-</script>
-</body>
-</html>
+function selLvl(l){lvl=l;document.getElementById('scr-lvl').classList.add('hid');document.getElementById('app').classList.remove('hid');document.getElementById('lvlbtn').classList.remove('hid');const ab=document.getElementById('t-a');if(l==='e'){ab.classList.remove('hid');tab('a',ab)}else{ab.classList.add('hid');tab('w',document.getElementById('t-w'))}document.getElementById('w').innerHTML=words[l].map(x=><div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:20px;color:#e11d48">${x[0]}</b><button class="sbtn" onclick="clk();spk('${x[0]}')">🔊</button></div><small style="color:#64748b">Bokmål: ${x[1]}</small><div style="font-weight:700;margin:6px 0">${x[2]}</div><div style="background:#f1f5f9;padding:8px;border-radius:10px;font-size:13px">${x[3]}</div></div>).join('');qi=0;sc=0;document.getElementById('qbox').classList.remove('hid');document.getElementById('pay').classList.add('hid');loadQ()}
+function rstLvl(){document.getElementById('app').classList.add('hid');document.getElementById('lvlbtn').classList.add('hid');document.getElementById('scr-lvl').classList.remove('hid')}
+function tab(id,b){['a','w','q','v'].forEach(x=>document.getElementById(x).classList.add('hid'));document.getElementById(id).classList.remove('hid');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('act'));b.classList.add('act')}
+function loadQ(){const l=qs[lvl];if(qi>=l.length){okSnd();spk('Gratulerer! Du er kjempeflink!');document.getElementById('qbox').classList.add('hid');document.getElementById('pay').classList.remove('hid');return}const c=l[qi];document.getElementById('qcnt').innerText=Вопрос ${qi+1}/20 (Бесплатно);document.getElementById('qscr').innerText=Верно: ${sc};document.getElementById('qtxt').innerText=c[0];document.getElementById('qfb').innerText='';document.getElementById('nxt').classList.add('hid');const od=document.getElementById('qopts');od.innerHTML='';[c[1],c[2],c[3]].forEach((t,i)=>{const b=document.createElement('button');b.className='qopt';b.innerText=t;b.onclick=()=>chk(b,i===c[4]);od.appendChild(b)})}
+function chk(b,ok){document.querySelectorAll('.qopt').forEach(x=>x.disabled=true);const f=document.getElementById('qfb');if(ok){sc++;okSnd();spk('Det er veldig bra! Kjempefint!');b.style.background='#10b981';b.style.color='#fff';f.style.color='#047857';f.innerText='✅ Det er veldig bra! (Это очень хорошо!)'}else{errSnd();spk('Prøv igjen!');b.style.background='#e11d48';b.style.color='#fff';f.style.color='#be123c';f.innerText='❌ Неверно!'}document.getElementById('qscr').innerText=Верно: ${sc};document.getElementById('nxt').classList.remove('hid')}
+function nxtQ(){qi++;loadQ()}
+function vip(){tg.showAlert('Пришли платную ссылку за 100 Звёзд на твой закрытый VIP-канал, и я вставлю её сюда!')}
