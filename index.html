@@ -71,18 +71,29 @@ body{font-family:-apple-system,sans-serif;background:linear-gradient(180deg,#dbe
 </div>
 
 <script>
-const tg=window.Telegram.WebApp;tg.expand();
-if(tg.initDataUnsafe&&tg.initDataUnsafe.user){document.getElementById('wlc').innerText='Hei, '+tg.initDataUnsafe.user.first_name+'!';}
+let tg=null;
+try{
+    if(window.Telegram&&window.Telegram.WebApp){
+        tg=window.Telegram.WebApp;
+        tg.expand();
+        if(tg.initDataUnsafe&&tg.initDataUnsafe.user){
+            document.getElementById('wlc').innerText='Hei, '+tg.initDataUnsafe.user.first_name+'!';
+        }
+    }
+}catch(e){}
+
 let ctx=null,mus=false,mint=null,lvl='e',qi=0,sc=0,noteStep=0;
 
 function au(){try{if(!ctx){const AC=window.AudioContext||window.webkitAudioContext;ctx=new AC();}if(ctx.state==='suspended'){ctx.resume();}}catch(e){}}
 function tone(freq,type,dur,vol,delay){
-    au();if(!ctx)return;
-    const t=ctx.currentTime+(delay||0);
-    const o=ctx.createOscillator(),g=ctx.createGain();
-    o.type=type;o.frequency.setValueAtTime(freq,t);
-    g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);
-    o.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+dur);
+    try{
+        au();if(!ctx)return;
+        const t=ctx.currentTime+(delay||0);
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.type=type;o.frequency.setValueAtTime(freq,t);
+        g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+        o.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+dur);
+    }catch(e){}
 }
 function clk(){tone(520,'sine',0.07,0.2,0);}
 function okSnd(){tone(523,'triangle',0.25,0.2,0);tone(659,'triangle',0.25,0.2,0.08);tone(784,'triangle',0.3,0.2,0.16);tone(1046,'triangle',0.4,0.25,0.24);}
@@ -131,14 +142,13 @@ const wordsDB={
         {w:'Å føretrekkje',b:'Å foretrekke',t:'Предпочитать',ex:'Eg føretrekkjer å skrive nynorsk. — Я предпочитаю писать на нюношке.'},
         {w:'Sjølvsagt',b:'Selvfølgelig',t:'Разумеется',ex:'Sjølvsagt kan eg hjelpe deg! — Конечно, я могу помочь!'},
         {w:'Å hugse',b:'Å huske',t:'Помнить',ex:'Hugsar du kva ho sa? — Ты помнишь, что она сказала?'},
-        {w:'Å gjere',b:'Å gjøre',t:'Делать (gjer)',ex:'Kva skal vi gjere i helga? — Что будем делать на выходных?'}
-    ]
+{w:'Å gjere',b:'Å gjøre',t:'Делать (gjer)',ex:'Kva skal vi gjere i helga? — Что будем делать на выходных?'}
+]
 };
-
 const qsDB={
-    e:[
-        {q:'1. Перевод «Hei»?',o1:'Пока',o2:'Привет',o3:'Спасибо',a:2},
-        {q:'2. Букв в алфавите?',o1:'26',o2:'29',o3:'33',a:2},
+e:[
+{q:'1. Перевод «Hei»?',o1:'Пока',o2:'Привет',o3:'Спасибо',a:2},
+{q:'2. Букв в алфавите?',o1:'26',o2:'29',o3:'33',a:2},
 {q:'3. «Я» на Nynorsk?',o1:'Jeg',o2:'Eg',o3:'Ik',a:2},
 {q:'4. «Спасибо»?',o1:'Takk',o2:'Unnskyld',o3:'Bra',a:1},
 {q:'5. «Не» на Nynorsk?',o1:'Ikke',o2:'Ikkje',o3:'Inte',a:2},
@@ -211,9 +221,10 @@ document.getElementById('lvlbtn').classList.remove('hid');
 const ab=document.getElementById('t-a');
 if(l==='e'){ab.classList.remove('hid');tab('a',ab);}
 else{ab.classList.add('hid');tab('w',document.getElementById('t-w'));}
-document.getElementById('w').innerHTML=wordsDB.e.map(x=><div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:20px;color:#e11d48">${x.w}</b><button class="sbtn" onclick="clk();spk('${x.w}')">🔊</button></div><small style="color:#64748b">Bokmål: ${x.b}</small><div style="font-weight:700;margin:6px 0">${x.t}</div><div style="background:#f1f5f9;padding:8px;border-radius:10px;font-size:13px">${x.ex}</div></div>).join('');
-if(l==='m'){document.getElementById('w').innerHTML=wordsDB.m.map(x=><div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:20px;color:#e11d48">${x.w}</b><button class="sbtn" onclick="clk();spk('${x.w}')">🔊</button></div><small style="color:#64748b">Bokmål: ${x.b}</small><div style="font-weight:700;margin:6px 0">${x.t}</div><div style="background:#f1f5f9;padding:8px;border-radius:10px;font-size:13px">${x.ex}</div></div>).join('');}
-if(l==='h'){document.getElementById('w').innerHTML=wordsDB.h.map(x=><div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:20px;color:#e11d48">${x.w}</b><button class="sbtn" onclick="clk();spk('${x.w}')">🔊</button></div><small style="color:#64748b">Bokmål: ${x.b}</small><div style="font-weight:700;margin:6px 0">${x.t}</div><div style="background:#f1f5f9;padding:8px;border-radius:10px;font-size:13px">${x.ex}</div></div>).join('');}
+let wList=wordsDB.e;
+if(l==='m')wList=wordsDB.m;
+if(l==='h')wList=wordsDB.h;
+document.getElementById('w').innerHTML=wList.map(x=><div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:20px;color:#e11d48">${x.w}</b><button class="sbtn" onclick="clk();spk('${x.w}')">🔊</button></div><small style="color:#64748b">Bokmål: ${x.b}</small><div style="font-weight:700;margin:6px 0">${x.t}</div><div style="background:#f1f5f9;padding:8px;border-radius:10px;font-size:13px">${x.ex}</div></div>).join('');
 qi=0;sc=0;
 document.getElementById('qbox').classList.remove('hid');
 document.getElementById('pay').classList.add('hid');
@@ -262,4 +273,7 @@ document.getElementById('qscr').innerText=Верно: ${sc};
 document.getElementById('nxt').classList.remove('hid');
 }
 function nxtQ(){qi++;loadQ();}
-function vip(){tg.showAlert('Пришли платную ссылку за 100 Звёзд на твой закрытый VIP-канал, и я вставлю её сюда!');}
+function vip(){
+const msg='Пришли платную ссылку за 100 Звёзд на твой закрытый VIP-канал, и я вставлю её сюда!';
+if(tg&&tg.showAlert){tg.showAlert(msg);}else{alert(msg);}
+}
